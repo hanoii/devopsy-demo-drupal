@@ -1,0 +1,77 @@
+name: ${DEVOPSY_PROJECT?}-${DEVOPSY_ENVIRONMENT-main}
+
+services:
+  database:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: database.Dockerfile
+    command: --max-allowed-packet=64M
+    environment:
+      - MARIADB_RANDOM_ROOT_PASSWORD=1
+      - MARIADB_USER=db
+      - MARIADB_PASSWORD=db
+      - MARIADB_DATABASE=db
+      - MARIADB_MYSQL_LOCALHOST_USER=1
+      - MARIADB_MYSQL_LOCALHOST_GRANTS=ALL PRIVILEGES
+    user: ${DEVOPSY_UID?}:${DEVOPSY_GID}
+    volumes:
+      - ./mnt/mysql:/var/lib/mysql
+    networks:
+      - default
+
+  php:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: app.Dockerfile
+      args:
+        DEVOPSY_UID: ${DEVOPSY_UID?}
+        DEVOPSY_GID: ${DEVOPSY_GID?}
+    read_only: true
+    environment:
+      - DEVOPSY=true
+      - DRUSH_OPTIONS_URI=https://$DEVOPSY_HOST
+      - ENVIRONMENT=${DEVOPSY_ENVIRONMENT-development}
+    expose:
+      - 80
+    depends_on:
+      - database
+#      - mailpit #Uncomment this when mailpit is added back in
+    networks:
+      - default
+      - traefik
+    volumes:
+      - ../:/var/www/html:ro
+      - ./mnt/files:/var/www/html/web/sites/default/files
+      - ./mnt/files-private:/var/www/html/.devopsy/mnt/files-private
+      # Should we make this readonly too?
+      - ./mnt/home:/home/mercados
+      - type: tmpfs
+        target: /run
+        # I have no idea why 1023 ends up in 1777 in the container
+        # It was by trial and error that I got this
+        tmpfs:
+          mode: 1023
+      - type: tmpfs
+        target: /tmp
+    user: ${DEVOPSY_UID?}:${DEVOPSY_GID}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${DEVOPSY_TRAEFIK_NAME-traefik-main}"
+      - "traefik.http.routers.${DEVOPSY_PROJECT?}-${DEVOPSY_ENVIRONMENT-main}.rule=Host(`$DEVOPSY_HOST`)"
+#  mailpit:
+#    image: axllent/mailpit
+#    restart: unless-stopped
+#    ports:
+#      - "8025:8025"
+#    expose:
+#      - 1025
+#    networks:
+#      - default
+networks:
+  default:
+    name: ${DEVOPSY_PROJECT?}-${DEVOPSY_ENVIRONMENT-main}
+  traefik:
+    name: ${DEVOPSY_TRAEFIK_NAME-traefik-main}
+    external: true

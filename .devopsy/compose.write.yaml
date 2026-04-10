@@ -1,0 +1,5 @@
+services:
+  php:
+    read_only: !reset false
+    volumes:
+      - ../:/var/www/html

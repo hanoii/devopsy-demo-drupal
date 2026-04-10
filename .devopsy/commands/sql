@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -e -o pipefail
+
+exec_args=
+mysql_args="-udb --password=db db"
+while :; do
+  case $1 in
+    -h|-\?|--help)
+        echo "help"
+        exit
+        ;;
+    --tuner)
+        devopsy exec -u mysql database mysqltuner.pl
+        exit
+        ;;
+    --root)
+        mysql_args="-umysql"
+        exec_args="-umysql"
+        ;;
+    --)
+        shift
+        break
+        ;;
+    -?*)
+        printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+        ;;
+    *)               # Default case: If no more options then break out of the loop.
+        break
+  esac
+
+  shift
+done
+
+tty_args=
+if ! [ -t 0 ]; then
+  tty_args="-T"
+fi
+devopsy exec $exec_args $tty_args database mariadb -A $mysql_args "$@"

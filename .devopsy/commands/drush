@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# Recuerda darle permisos de ejecución a este script:
+# chmod +x .devopsy/commands/drush
+
+MAIN_COMPOSE="$DEVOPSY_PROJECT_DIR/compose.yaml"
+WRITE_OVERRIDE="$DEVOPSY_PROJECT_DIR/compose.write.yaml"
+SERVICE="php"
+#DRUSH_BIN="./vendor/bin/drush"
+DRUSH_BIN="drush"
+
+COMPOSE_FILES="-f $MAIN_COMPOSE -f $WRITE_OVERRIDE"
+
+# Verificamos si hay un override
+if [ -f "$DEVOPSY_PROJECT_DIR/compose.override.yaml" ]; then
+    COMPOSE_FILES="$COMPOSE_FILES -f $DEVOPSY_PROJECT_DIR/compose.override.yaml"
+fi
+
+if [ $(docker compose $COMPOSE_FILES ps -q $SERVICE 2>/dev/null) ]; then
+    # Si el contenedor ya está corriendo (up), usamos exec
+    CMD="docker compose $COMPOSE_FILES exec $SERVICE $DRUSH_BIN $@"
+else
+    # Si está apagado, usamos run --rm
+    CMD="docker compose $COMPOSE_FILES run --rm $SERVICE $DRUSH_BIN $@"
+fi
+
+>&2 echo -e "\033[0;36mRunning Drush: $CMD\033[0m"
+
+# Ejecutamos
+$CMD
+
+if [ $? -eq 0 ]; then
+    >&2 echo -e "\033[0;32mDrush command executed successfully.\033[0m"
+fi

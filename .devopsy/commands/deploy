@@ -1,0 +1,1 @@
+devopsy ssh -w -- -c "./.devopsy/scripts/deploy"
