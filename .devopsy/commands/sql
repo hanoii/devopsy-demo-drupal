@@ -4,6 +4,12 @@ set -e -o pipefail
 
 exec_args=
 mysql_args="-udb --password=db db"
+
+tty_args=
+if ! [ -t 0 ]; then
+  tty_args="-T"
+fi
+
 while :; do
   case $1 in
     -h|-\?|--help)
@@ -12,6 +18,12 @@ while :; do
         ;;
     --tuner)
         devopsy exec -u mysql database mysqltuner.pl
+        exit
+        ;;
+    --dump)
+        dump_file="/tmp/${2:-${DEVOPSY_PROJECT:-dump}.sql}"
+        devopsy exec $tty_args database mysqldump -udb --password=db db > "$dump_file"
+        echo "Database dumped to $dump_file"
         exit
         ;;
     --root)
@@ -32,8 +44,4 @@ while :; do
   shift
 done
 
-tty_args=
-if ! [ -t 0 ]; then
-  tty_args="-T"
-fi
 devopsy exec $exec_args $tty_args database mariadb -A $mysql_args "$@"
