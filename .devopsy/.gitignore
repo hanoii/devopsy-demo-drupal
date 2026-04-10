@@ -1,4 +1,6 @@
-/mnt
+/mnt/**
+!/mnt/**/
+!/mnt/**/.gitkeep
 /.env
 /docker-compose.override.y*ml
 /compose.override.y*ml
