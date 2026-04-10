@@ -6,9 +6,6 @@ FROM php:8.4-apache-trixie
 ARG TARGETPLATFORM
 RUN echo "I'm building for $TARGETPLATFORM"
 
-ARG DEVOPSY_UID
-ARG DEVOPSY_GID
-
 # install the PHP extensions we need
 RUN set -eux; \
   \
@@ -101,11 +98,6 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 ENV PATH="$PATH:/var/www/html/vendor/bin"
-
-# RUN groupadd -g $DEVOPSY_GID mercados
-# RUN useradd -u $DEVOPSY_UID -g mercados -s /bin/bash -d /home/mercados mercados
-# RUN mkdir /home/mercados
-# RUN chown mercados:mercados /home/mercados
 
 # vim:set ft=dockerfile:
 

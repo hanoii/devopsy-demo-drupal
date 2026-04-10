@@ -8,6 +8,8 @@ services:
       dockerfile: database.Dockerfile
     command: --max-allowed-packet=64M
     environment:
+      - DEVOPSY=true
+      - DEVOPSY_PROJECT=${DEVOPSY_PROJECT?:}
       - MARIADB_RANDOM_ROOT_PASSWORD=1
       - MARIADB_USER=db
       - MARIADB_PASSWORD=db
@@ -31,6 +33,7 @@ services:
     read_only: true
     environment:
       - DEVOPSY=true
+      - DEVOPSY_PROJECT=${DEVOPSY_PROJECT?:}
       - DRUSH_OPTIONS_URI=https://$DEVOPSY_HOST
       - ENVIRONMENT=${DEVOPSY_ENVIRONMENT-development}
     expose:
