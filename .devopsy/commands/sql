@@ -22,7 +22,7 @@ while :; do
         ;;
     --dump)
         dump_file="/tmp/${2:-${DEVOPSY_PROJECT:-dump}.sql}"
-        devopsy exec $tty_args database mysqldump -udb --password=db db > "$dump_file"
+        devopsy exec $tty_args database mariadb-dump -udb --password=db db > "$dump_file"
         echo "Database dumped to $dump_file"
         exit
         ;;
